@@ -1,0 +1,60 @@
+networks:
+  network:
+
+volumes:
+  database-postgres-movie:
+
+
+#on veut être absolument sur que la DB est activé avant de commencer à démarrer le back et le front sinon au démarrage il y  a un problème
+services:
+  db:
+    image: postgres:16
+    container_name: container_postgres
+    environment:
+      POSTGRES_DB: moviedb
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+    networks:
+      - network
+    volumes:
+      - database-postgres-movie:/var/lib/postgresql/data:rw
+    healthcheck:
+      test: pg_isready -U databaseUser -d myDatabase
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      # les 2 trucs en dessous permette juste de faire des test plus réguliers durants les premiers instants du lancement de docker. Afin de ne pas avoir a attendre l'interval usuel (genre 2 minutes c'est chiant) si le truc lache direct.
+      start_period: 30s
+      start_interval: 3s
+
+
+  back:
+    image: backend
+    #on vient vérifier le healthcheck de db
+    depends_on:
+      - db
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    container_name: backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://container_postgres:5432/moviedb
+      SPRING_DATASOURCE_USERNAME: username
+      SP:RING_DATASOURCE_PASSWORD: password
+    ports:
+      - 8080:8080
+    networks:
+        - network
+
+  front:
+    image: frontend
+    depends_on:
+      - db
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    environment:
+      BACKEND_URL: http://localhost:8080/
+    ports:
+      - 8888:80

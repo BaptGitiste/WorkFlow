@@ -1,0 +1,31 @@
+-----V1
+
+#On se base sur une image node contenant tout ce dont on a besoin js et tout et tout
+FROM node:22-alpine
+
+# on crée un dossier dans lequel on va faire toute notre merde pluto que de risquer de faire des trucs dans le dossier actuel et de casser des trucs.
+WORKDIR /app
+
+#copier l'intégralité du dossier js dan le dossier app que l'on crée juste au dessus
+COPY . .  
+
+#on install les dépendances cependatn c'est très lent de ré installer les dépendances à chaque lancement donc on peut mieux faire.
+RUN npm install
+
+
+#on éxécute la ligne de commande npm run dev pour lancer le programme.
+CMD ["npm", "run", "dev"]
+
+-----V2
+
+FROM nginx:1.27-alpine
+
+COPY dist/ /usr/share/nginx/html
+
+-----V3
+
+FROM nginx:1.27-alpine
+
+COPY nginx/ /etc/nginx
+
+COPY dist/ /usr/share/nginx/html
